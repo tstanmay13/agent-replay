@@ -1,0 +1,5 @@
+/target
+**/*.rs.bk
+# Ignore ad-hoc .replay files, but keep the committed demo fixtures.
+*.replay
+!fixtures/*.replay

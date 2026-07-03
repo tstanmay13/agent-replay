@@ -1,0 +1,9 @@
+{"type":"user","uuid":"u1","parentUuid":null,"sessionId":"sample","cwd":"/repo","gitBranch":"main","version":"2.0.0","message":{"role":"user","content":"Add a --version flag to the CLI and run the tests."}}
+{"type":"assistant","uuid":"a1","parentUuid":"u1","message":{"role":"assistant","content":[{"type":"thinking","thinking":"I should find the arg parser first."},{"type":"text","text":"I'll locate the CLI arg parsing."},{"type":"tool_use","id":"t1","name":"Grep","input":{"pattern":"clap","path":"src"}}]}}
+{"type":"attachment","uuid":"att1","parentUuid":"a1"}
+{"type":"user","uuid":"u2","parentUuid":"att1","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"t1","content":"src/cli.rs: use clap::Parser;","is_error":false}]}}
+{"type":"assistant","uuid":"a2","parentUuid":"u2","message":{"role":"assistant","content":[{"type":"text","text":"Adding the flag to src/cli.rs."},{"type":"tool_use","id":"t2","name":"Edit","input":{"file":"src/cli.rs","old":"struct Cli {","new":"struct Cli {\n  #[arg(long)] version: bool,"}}]}}
+{"type":"user","uuid":"u3","parentUuid":"a2","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"t2","content":"edited src/cli.rs","is_error":false}]}}
+{"type":"assistant","uuid":"a3","parentUuid":"u3","message":{"role":"assistant","content":[{"type":"text","text":"Running the tests."},{"type":"tool_use","id":"t3","name":"Bash","input":{"command":"cargo test"}}]}}
+{"type":"user","uuid":"u4","parentUuid":"a3","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"t3","content":"test result: ok. 12 passed","is_error":false}]}}
+{"type":"assistant","uuid":"a4","parentUuid":"u4","message":{"role":"assistant","content":[{"type":"text","text":"Done — added --version and all 12 tests pass."}]}}

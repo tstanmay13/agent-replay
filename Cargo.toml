@@ -1,0 +1,25 @@
+[package]
+name = "agent-replay"
+version = "0.1.0"
+edition = "2021"
+description = "Record, deterministically replay, diff, and fork Claude Code agent sessions. Turn a flaky agent run into a reproducible fixture."
+license = "MIT"
+repository = "https://github.com/tstanmay13/agent-replay"
+readme = "README.md"
+keywords = ["claude-code", "agent", "replay", "determinism", "cli"]
+categories = ["command-line-utilities", "development-tools"]
+
+[[bin]]
+name = "agentreplay"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+anyhow = "1"
+
+[profile.release]
+strip = true
+lto = true

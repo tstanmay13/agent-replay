@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test --all
+      - run: cargo build --release
+      # Smoke-test the built binary on the committed fixture (no network, no
+      # external state) and assert the run round-trips deterministically.
+      - run: ./target/release/agentreplay replay fixtures/sample.replay
+      - run: ./target/release/agentreplay check fixtures/sample.replay --must-succeed --max-tool-calls 10

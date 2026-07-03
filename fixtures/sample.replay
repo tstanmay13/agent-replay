@@ -1,0 +1,144 @@
+{
+  "format": 1,
+  "meta": {
+    "session_id": "sample",
+    "cwd": "/repo",
+    "git_branch": "main",
+    "claude_version": "2.0.0",
+    "source": "transcript:fixtures/sample-session.jsonl"
+  },
+  "steps": [
+    {
+      "seq": 0,
+      "uuid": "u1",
+      "parent": null,
+      "role": "user",
+      "blocks": [
+        {
+          "kind": "text",
+          "text": "Add a --version flag to the CLI and run the tests."
+        }
+      ],
+      "hash": "336c23da795590f52cced282"
+    },
+    {
+      "seq": 1,
+      "uuid": "a1",
+      "parent": "u1",
+      "role": "assistant",
+      "blocks": [
+        {
+          "kind": "thinking",
+          "len": 35
+        },
+        {
+          "kind": "text",
+          "text": "I'll locate the CLI arg parsing."
+        },
+        {
+          "kind": "tool_use",
+          "id": "t1",
+          "name": "Grep",
+          "input": "{\"path\":\"src\",\"pattern\":\"clap\"}"
+        }
+      ],
+      "hash": "ae8f1d958396a47655985499"
+    },
+    {
+      "seq": 2,
+      "uuid": "u2",
+      "parent": "a1",
+      "role": "user",
+      "blocks": [
+        {
+          "kind": "tool_result",
+          "tool_use_id": "t1",
+          "output": "src/cli.rs: use clap::Parser;",
+          "is_error": false
+        }
+      ],
+      "hash": "1f9a990a8b25aa3b99915224"
+    },
+    {
+      "seq": 3,
+      "uuid": "a2",
+      "parent": "u2",
+      "role": "assistant",
+      "blocks": [
+        {
+          "kind": "text",
+          "text": "Adding the flag to src/cli.rs."
+        },
+        {
+          "kind": "tool_use",
+          "id": "t2",
+          "name": "Edit",
+          "input": "{\"file\":\"src/cli.rs\",\"new\":\"struct Cli {\\n  #[arg(long)] version: bool,\",\"old\":\"struct Cli {\"}"
+        }
+      ],
+      "hash": "4bf6147859385bd42ce3ee27"
+    },
+    {
+      "seq": 4,
+      "uuid": "u3",
+      "parent": "a2",
+      "role": "user",
+      "blocks": [
+        {
+          "kind": "tool_result",
+          "tool_use_id": "t2",
+          "output": "edited src/cli.rs",
+          "is_error": false
+        }
+      ],
+      "hash": "840cee16dcaf013842bfade6"
+    },
+    {
+      "seq": 5,
+      "uuid": "a3",
+      "parent": "u3",
+      "role": "assistant",
+      "blocks": [
+        {
+          "kind": "text",
+          "text": "Running the tests."
+        },
+        {
+          "kind": "tool_use",
+          "id": "t3",
+          "name": "Bash",
+          "input": "{\"command\":\"cargo test\"}"
+        }
+      ],
+      "hash": "40017b3b4e9b1b536549ce36"
+    },
+    {
+      "seq": 6,
+      "uuid": "u4",
+      "parent": "a3",
+      "role": "user",
+      "blocks": [
+        {
+          "kind": "tool_result",
+          "tool_use_id": "t3",
+          "output": "test result: ok. 12 passed",
+          "is_error": false
+        }
+      ],
+      "hash": "61877da37478959df645bb5b"
+    },
+    {
+      "seq": 7,
+      "uuid": "a4",
+      "parent": "u4",
+      "role": "assistant",
+      "blocks": [
+        {
+          "kind": "text",
+          "text": "Done — added --version and all 12 tests pass."
+        }
+      ],
+      "hash": "5f80f2053d35b7a862eec0f4"
+    }
+  ]
+}
