@@ -41,6 +41,8 @@ The unit is the **content hash of each step** (role + text + tool calls + tool r
 
 ## Install
 
+Prebuilt binaries for macOS (Apple Silicon + Intel) and Linux are attached to each [GitHub Release](https://github.com/tstanmay13/agent-replay/releases) — download, `tar -xzf`, and drop `agentreplay` on your `PATH`, no Rust toolchain needed. From source:
+
 ```bash
 cargo install --path .        # or: cargo build --release
 ```

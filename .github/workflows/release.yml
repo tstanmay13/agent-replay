@@ -1,0 +1,45 @@
+name: Release
+
+# On a published GitHub Release (tag v*), build stripped binaries for macOS
+# (Apple Silicon + Intel) and Linux, and attach them to the release — so users
+# can install agentreplay without a Rust toolchain.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  binaries:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release --locked --target ${{ matrix.target }}
+      - name: Package
+        shell: bash
+        run: |
+          bin=target/${{ matrix.target }}/release/agentreplay
+          tar -czf "agentreplay-${{ matrix.target }}.tar.gz" -C "$(dirname "$bin")" agentreplay
+      - name: Attach to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: agentreplay-${{ matrix.target }}.tar.gz
