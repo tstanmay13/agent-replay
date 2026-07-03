@@ -73,6 +73,9 @@ struct ReplayArgs {
     /// Truncate each rendered line to this many characters.
     #[arg(long, default_value_t = 100)]
     width: usize,
+    /// Emit the verification report as JSON.
+    #[arg(long)]
+    json: bool,
 }
 
 #[derive(Args)]
@@ -81,6 +84,9 @@ struct DiffArgs {
     a: PathBuf,
     /// Candidate run (.replay or transcript .jsonl).
     b: PathBuf,
+    /// Emit the diff as JSON.
+    #[arg(long)]
+    json: bool,
 }
 
 #[derive(Args)]
@@ -115,6 +121,9 @@ struct CheckArgs {
     /// Fail if any tool result errored.
     #[arg(long)]
     must_succeed: bool,
+    /// Emit the check result as JSON.
+    #[arg(long)]
+    json: bool,
 }
 
 fn main() -> ExitCode {
@@ -207,6 +216,14 @@ fn cmd_record(args: RecordArgs) -> Result<ExitCode> {
 fn cmd_replay(args: ReplayArgs) -> Result<ExitCode> {
     let run = load_run(&args.file)?;
     let report = replay::replay(&run);
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&report)?);
+        return Ok(if report.verified {
+            ExitCode::SUCCESS
+        } else {
+            ExitCode::FAILURE
+        });
+    }
     if args.show {
         print!("{}", replay::render_playback(&run, args.width));
         println!();
@@ -236,6 +253,15 @@ fn cmd_diff(args: DiffArgs) -> Result<ExitCode> {
     let a = load_run(&args.a)?;
     let b = load_run(&args.b)?;
     let d = diff::diff(&a, &b);
+
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&d)?);
+        return Ok(if d.identical {
+            ExitCode::SUCCESS
+        } else {
+            ExitCode::FAILURE
+        });
+    }
 
     println!(
         "A {}  ({} steps, digest {})",
@@ -304,6 +330,20 @@ fn cmd_check(args: CheckArgs) -> Result<ExitCode> {
         ));
     }
     let violations = check::check(&run, &rules);
+    if args.json {
+        let out = serde_json::json!({
+            "passed": violations.is_empty(),
+            "steps": run.steps.len(),
+            "tool_calls": run.tool_calls(),
+            "violations": violations,
+        });
+        println!("{}", serde_json::to_string_pretty(&out)?);
+        return Ok(if violations.is_empty() {
+            ExitCode::SUCCESS
+        } else {
+            ExitCode::FAILURE
+        });
+    }
     if violations.is_empty() {
         println!(
             "check passed ({} steps, {} tool calls)",

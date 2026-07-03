@@ -29,6 +29,7 @@ impl Rules {
     }
 }
 
+#[derive(serde::Serialize)]
 pub struct Violation {
     pub rule: String,
     pub detail: String,

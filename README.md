@@ -70,7 +70,22 @@ On your own machine, `agentreplay ls` lists your Claude Code sessions and `agent
 | `fork <file> --at <n> [--prompt <text>] --out <file>` | Branch a run at a step, optionally seeding a new prompt. |
 | `check <file> [rules…]` | Assert `--max-steps`, `--max-tool-calls`, `--forbid-tool`, `--forbid-path`, `--must-succeed`. Non-zero on violation. |
 
-`replay`, `diff`, `fork`, and `check` accept either a `.replay` file or a raw Claude Code transcript (`.jsonl`) directly.
+`replay`, `diff`, `fork`, and `check` accept either a `.replay` file or a raw Claude Code transcript (`.jsonl`) directly. `replay`, `diff`, and `check` take `--json` for machine-readable output (and still exit non-zero on failure), so they drop straight into scripts and pipelines.
+
+## Use it in CI
+
+Commit a known-good `.replay` fixture and gate every change against it with the bundled GitHub Action — a regression test for your agent's behavior:
+
+```yaml
+- uses: tstanmay13/agent-replay@main
+  with:
+    file: fixtures/golden.replay
+    must-succeed: "true"
+    forbid-paths: ".env secrets/"
+    max-tool-calls: "50"
+```
+
+The step fails the build if the run errored, touched a forbidden path, or exceeded the tool-call budget. Or call the CLI directly with `--json` and parse the result.
 
 ## How it works
 
@@ -81,7 +96,7 @@ On your own machine, `agentreplay ls` lists your Claude Code sessions and `agent
 ## Development
 
 ```bash
-cargo test              # 16 tests, no network
+cargo test              # 18 tests, no network
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all --check
 ```

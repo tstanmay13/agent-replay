@@ -12,21 +12,27 @@
 //! I/O), not full-OS replay of filesystem or clock state.
 
 use crate::model::{Block, Run};
+use serde::Serialize;
 
+#[derive(Serialize)]
 pub struct ReplayReport {
     pub digest: String,
     pub steps: usize,
     pub tool_calls: usize,
     /// None if every recomputed step hash matched; Some(seq) at the first that did not.
     pub integrity_break: Option<usize>,
+    /// True when every recomputed step hash matched the recording.
+    pub verified: bool,
 }
 
 pub fn replay(run: &Run) -> ReplayReport {
+    let integrity_break = run.verify_integrity().err();
     ReplayReport {
         digest: run.digest(),
         steps: run.steps.len(),
         tool_calls: run.tool_calls(),
-        integrity_break: run.verify_integrity().err(),
+        verified: integrity_break.is_none(),
+        integrity_break,
     }
 }
 
@@ -80,5 +86,50 @@ fn truncate(s: &str, max: usize) -> String {
     } else {
         let cut: String = one_line.chars().take(max).collect();
         format!("{cut}…")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::model::{Block, Role, RunMeta, Step};
+
+    fn run() -> Run {
+        let mk = |seq: usize, role: Role, t: &str| {
+            let blocks = vec![Block::Text { text: t.into() }];
+            let hash = Step::compute_hash(&role, &blocks);
+            Step {
+                seq,
+                uuid: format!("u{seq}"),
+                parent: None,
+                role,
+                ts: None,
+                blocks,
+                hash,
+            }
+        };
+        Run::new(
+            RunMeta::default(),
+            vec![mk(0, Role::User, "hi"), mk(1, Role::Assistant, "ok")],
+        )
+    }
+
+    #[test]
+    fn clean_run_verifies() {
+        let r = replay(&run());
+        assert!(r.verified);
+        assert_eq!(r.integrity_break, None);
+        assert_eq!(r.steps, 2);
+    }
+
+    #[test]
+    fn tampered_run_fails_verification_at_the_right_step() {
+        let mut run = run();
+        run.steps[1].blocks = vec![Block::Text {
+            text: "tampered".into(),
+        }]; // hash now stale
+        let r = replay(&run);
+        assert!(!r.verified);
+        assert_eq!(r.integrity_break, Some(1));
     }
 }

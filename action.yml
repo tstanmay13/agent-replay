@@ -1,0 +1,50 @@
+name: "agent-replay check"
+description: "Assert rules over a recorded Claude Code agent run (.replay) and fail the build on violation."
+branding:
+  icon: "check-circle"
+  color: "purple"
+
+inputs:
+  file:
+    description: "Path to the .replay file (or Claude Code .jsonl transcript) to check."
+    required: true
+  max-steps:
+    description: "Fail if the run has more than this many steps."
+    required: false
+  max-tool-calls:
+    description: "Fail if the run made more than this many tool calls."
+    required: false
+  forbid-tools:
+    description: "Space-separated tool names that must not be called (e.g. 'Bash WebFetch')."
+    required: false
+  forbid-paths:
+    description: "Space-separated substrings that must not appear in any tool input (e.g. '.env secrets/')."
+    required: false
+  must-succeed:
+    description: "If 'true', fail if any tool result errored."
+    required: false
+    default: "false"
+  version:
+    description: "git ref of agent-replay to install (branch, tag, or commit)."
+    required: false
+    default: "main"
+
+runs:
+  using: composite
+  steps:
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    - name: Install agentreplay
+      shell: bash
+      run: cargo install --git https://github.com/tstanmay13/agent-replay --rev "${{ inputs.version }}" --locked || cargo install --git https://github.com/tstanmay13/agent-replay --branch "${{ inputs.version }}" --locked
+    - name: Run check
+      shell: bash
+      run: |
+        args=()
+        [ -n "${{ inputs.max-steps }}" ] && args+=(--max-steps "${{ inputs.max-steps }}")
+        [ -n "${{ inputs.max-tool-calls }}" ] && args+=(--max-tool-calls "${{ inputs.max-tool-calls }}")
+        for t in ${{ inputs.forbid-tools }}; do args+=(--forbid-tool "$t"); done
+        for p in ${{ inputs.forbid-paths }}; do args+=(--forbid-path "$p"); done
+        [ "${{ inputs.must-succeed }}" = "true" ] && args+=(--must-succeed)
+        echo "agentreplay check ${{ inputs.file }} ${args[*]}"
+        agentreplay check "${{ inputs.file }}" "${args[@]}"

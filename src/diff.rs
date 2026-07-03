@@ -6,8 +6,10 @@
 //! tool input, a different result, or added/removed steps.
 
 use crate::model::{Block, Run, Step};
+use serde::Serialize;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
+#[serde(tag = "status", rename_all = "snake_case")]
 pub enum StepDiff {
     Same,
     Changed { detail: String },
@@ -15,6 +17,7 @@ pub enum StepDiff {
     OnlyInB,
 }
 
+#[derive(Serialize)]
 pub struct RunDiff {
     pub rows: Vec<(usize, StepDiff)>,
     pub first_divergence: Option<usize>,
